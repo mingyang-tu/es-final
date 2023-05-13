@@ -14,11 +14,11 @@ public:
 
     void check_left_right(uint8_t& right, uint8_t& left);
 
-    void check_up_down(uint8_t& up, uint8_t& down);
+    void check_up_down(uint8_t& jump, uint8_t& shot);
 
     void check_jump(uint8_t& jump);
 
-    void getAction(uint8_t& right, uint8_t& left, uint8_t& up, uint8_t& down, uint8_t& hit, uint8_t& jump);
+    void getAction(uint8_t& right, uint8_t& left, uint8_t& jump, uint8_t& shot);
 
 private:
     events::EventQueue  &_event_queue;

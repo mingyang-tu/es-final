@@ -3,7 +3,7 @@
 
 #define TimeStep            (float)SAMPLE_RATE / 1000
 #define SAMPLE_RATE         2
-#define SAMPLE_PERIOD       2
+#define SAMPLE_PERIOD       2ms
 #define Rotation_threshold  1
 #define SCALE_MULTIPLIER    0.004
 
@@ -52,10 +52,6 @@ void Sensor::update(){
 
 void Sensor::check_left_right(uint8_t& right, uint8_t& left) {
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-    /*if((_pAccDataXYZ[0] - _AccOffset[0] - accumulate_x)*SCALE_MULTIPLIER > 0.7)
-        left = 1;
-    else if((_pAccDataXYZ[0] - _AccOffset[0] - accumulate_x)*SCALE_MULTIPLIER < -0.7)
-        right = 1;*/
     if((_pAccDataXYZ[0] - _AccOffset[0])*SCALE_MULTIPLIER > 0.8)
         left = 1;
     if((_pAccDataXYZ[0] - _AccOffset[0])*SCALE_MULTIPLIER < -0.8)
@@ -63,14 +59,14 @@ void Sensor::check_left_right(uint8_t& right, uint8_t& left) {
     accumulate_x = 0.8 * accumulate_x + 0.2 * _pAccDataXYZ[0];
 }
 
-void Sensor::check_up_down(uint8_t& up, uint8_t& down) {
+void Sensor::check_up_down(uint8_t& jump, uint8_t& shot) {
     //printf("Rotation distance = %f", rotation_distance);
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-    if((_pAccDataXYZ[1] - _AccOffset[1] - accumulate_y)*SCALE_MULTIPLIER > 1.0)
-        up = 1;
-    if((_pAccDataXYZ[1] - _AccOffset[1] - accumulate_y)*SCALE_MULTIPLIER < -1.0)
-        down = 1;
-    accumulate_y = 0.9 * accumulate_y + 0.1 * _pAccDataXYZ[1];
+    if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER > 1.0)
+        jump = 1;
+    if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER < -1.0)
+        shot = 1;
+    //accumulate_y = 0.9 * accumulate_y + 0.1 * _pAccDataXYZ[1];
 }
 
 void Sensor::check_jump(uint8_t& jump) {
@@ -79,9 +75,7 @@ void Sensor::check_jump(uint8_t& jump) {
     rotation_distance = 0;
 }
 
-void Sensor::getAction(uint8_t& right, uint8_t& left, uint8_t& up, uint8_t& down, uint8_t& hit, uint8_t& jump){
+void Sensor::getAction(uint8_t& right, uint8_t& left, uint8_t& jump, uint8_t& shot){
     check_left_right(right, left);
-    check_up_down(up, down);
-    check_jump(jump);
-    hit=1;
+    check_up_down(jump,shot);
 }

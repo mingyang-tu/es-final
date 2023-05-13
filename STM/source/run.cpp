@@ -3,19 +3,11 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
-#include "rtos.h"
 
-#define IP_address  "192.168.50.153"
-#define Port_number 54087
+#define IP_address  "192.168.50.112"
+#define Port_number 2049
 #define SEND_INT    5
 SocketAddress addr(IP_address, Port_number);
-
-void blink(DigitalOut *led) {
-    while(true) {
-        *led = !*led;
-        ThisThread::sleep_for(100ms);
-    }
-}
 
 WIFI::WIFI(WiFiInterface &wifi, Sensor * sensor, events::EventQueue &event_queue, UDPSocket* socket): _wifi(wifi), _sensor(sensor)
 , _event_queue(event_queue),// _led1(LED1, 1), _led2(LED2, 1),
@@ -37,7 +29,7 @@ void WIFI::connect_start(){
             break;
         }
         countConnect++;
-        printf("Connection error! Connect again... try %d times \n", countConnect + 1);
+        printf("Connection error! Connect again... try %d times \n", countConnect);
         ret = _wifi.connect(MBED_CONF_APP_WIFI_SSID, MBED_CONF_APP_WIFI_PASSWORD, NSAPI_SECURITY_WPA_WPA2);
     }
     //start_blink1.terminate();
@@ -68,11 +60,11 @@ WIFI::~WIFI() {
 void WIFI::send_data() {
     char data[64];
     nsapi_error_t response;
-    uint8_t right = 0, left = 0, up = 0, down = 0, hit = 0, jump = 0;
-    _sensor->getAction(right, left, up, down, hit, jump);
-    int len = sprintf(data,"{\"right\":%d,\"left\":%d,\"up\":%d,\"down\":%d,\"hit\":%d,\"jump\":%d}"
-                            , right, left, up, down, hit, jump);
-    //printf("{\"right\":%d,\"left\":%d,\"up\":%d,\"down\":%d,\"hit\":%d,\"jump\":%d\n}",right,left, up, down, hit, jump);
+    uint8_t right = 0, left = 0, jump = 0, shot = 0;
+    _sensor->getAction(right, left, jump, shot);
+    int len = sprintf(data,"{\"right\":%d,\"left\":%d,\"jump\":%d,\"shot\":%d}"
+                            , right, left, jump, shot);
+    printf("{\"right\":%d,\"left\":%d,\"jump\":%d,\"shot\":%d\n}",right,left, jump, shot);
     response = _socket->sendto(addr, data, len);
     //printf("%d\n", response);
     if (0 >= response){
