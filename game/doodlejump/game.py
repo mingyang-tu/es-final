@@ -3,6 +3,7 @@ import os
 import sys
 import socket
 import threading
+import json
 
 from .constants import *
 from .sprites.doodle import Doodle
@@ -50,15 +51,10 @@ def load_assets(assets_root):
 
 
 class Game:
-    def __init__(self, assets_root="./doodlejump/assets/", host=None, port=None):
-        ############### TODO ###############
-        # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        #     s.bind((host, port))
-        #     print(f'Bind {host}:{port}')
-        #     s.listen()
-        #     self.conn, self.addr = s.accept()
+    def __init__(self, host, port, assets_root="./doodlejump/assets/"):
+        self.host = host
+        self.port = port
         self.move = 0
-        ############### TODO ###############
 
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -84,19 +80,16 @@ class Game:
 
     def update(self):
         ############### TODO ###############
-        # with self.conn:
-        #     print(f'Connected by {self.addr}')
-        #     while True:
-        #         data = self.conn.recv(1024).decode('utf-8')
-        #         try:
-        #             print(data[0])
-        #             self.move = ((int(data[0]) - 2) * -8)
-        #         except:
-        #             pass
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.bind((self.host, self.port))
+        print(f'Bind {self.host}:{self.port}')
         while True:
-            clock = pygame.time.Clock()
-            clock.tick(1)
-            self.move = data2event("LEFT")
+            data, addr = s.recvfrom(1024)
+            try:
+                print(data)
+                self.move = data2event(json.loads(data))
+            except:
+                pass
         ############### TODO ###############
 
     def init_game(self):
