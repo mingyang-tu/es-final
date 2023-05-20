@@ -4,6 +4,7 @@ import sys
 import socket
 import threading
 import json
+import time
 
 from .constants import *
 from .sprites.doodle import Doodle
@@ -55,6 +56,7 @@ class Game:
         self.host = host
         self.port = port
         self.move = 0
+        self.running = True
 
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -73,7 +75,6 @@ class Game:
         self.camera_move = 0
         self.stage = 1
         self.score = 0
-        self.running = True
         self.gameover = False
         self.showmenu = False
         self.touch_monster = False
@@ -82,14 +83,21 @@ class Game:
         ############### TODO ###############
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.bind((self.host, self.port))
+        s.settimeout(3)
         print(f'Bind {self.host}:{self.port}')
         while True:
-            data, addr = s.recvfrom(1024)
+            if not self.running:
+                break
             try:
-                print(data)
+                data, addr = s.recvfrom(1024)
+                print("Data: ", data)
                 self.move = data2event(json.loads(data))
+            except socket.timeout:
+                print("Not received...", end="\r")
             except:
                 pass
+        s.close()
+        print("\nServer closed.")
         ############### TODO ###############
 
     def init_game(self):
@@ -117,7 +125,6 @@ class Game:
         self.camera_move = 0
         self.stage = 1
         self.score = 0
-        self.running = True
         self.gameover = False
         self.showmenu = False
         self.touch_monster = False
@@ -160,7 +167,6 @@ class Game:
             self.clock.tick(FPS)
 
         # get inputs
-            flag = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
@@ -172,12 +178,13 @@ class Game:
                         elif close == 1:
                             self.showmenu = True
                         elif close == -1:
-                            flag = True
+                            self.running = False
                         else:
                             raise ValueError("Unexpected value of [close]")
                     elif event.key == pygame.K_UP and not self.touch_monster:
                         self.doodle.shoot(self.assets["bullet"], [self.all_sprites, self.bullet_sprites])
-            if flag:
+
+            if not self.running:
                 break
 
         # update game
@@ -221,5 +228,8 @@ class Game:
             draw_text(self.screen, self.assets["font"], str(self.score), 32, BLACK, 10, 0)
             pygame.display.update()
 
+        self.running = False
+        thread.join()
+        print("Server thread exited.")
         pygame.quit()
         sys.exit()
