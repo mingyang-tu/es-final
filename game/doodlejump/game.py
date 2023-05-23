@@ -55,7 +55,14 @@ class Game:
     def __init__(self, host, port, assets_root="./doodlejump/assets/"):
         self.host = host
         self.port = port
-        self.status = {"connected": False, "move": 0}
+        self.status = {
+            "connected": False,
+            "move": 0,
+            "shot": False,
+            "up": False,
+            "down": False,
+            "enter": False
+        }
         self.running = True
 
         pygame.init()
@@ -92,7 +99,7 @@ class Game:
                 data, addr = s.recvfrom(1024)
                 print("Data: ", data, end="\r")
                 self.status["connected"] = True
-                self.status["move"] = data2event(json.loads(data))
+                data2event(json.loads(data), self.status)
             except socket.timeout:
                 self.status["connected"] = False
                 print("Not received...", end="\r")
@@ -170,22 +177,22 @@ class Game:
             self.clock.tick(FPS)
 
         # get inputs
+            if self.status["enter"]:
+                close = pause(self.screen, self.clock, self.assets, self.all_sprites, self.score, self.status)
+                if close == 0:
+                    pass
+                elif close == 1:
+                    self.showmenu = True
+                elif close == -1:
+                    self.running = False
+                else:
+                    raise ValueError("Unexpected value of [close]")
+            if self.status["shot"]:
+                self.doodle.shoot(self.assets["bullet"], [self.all_sprites, self.bullet_sprites])
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        close = pause(self.screen, self.clock, self.assets, self.all_sprites, self.score, self.status)
-                        if close == 0:
-                            pass
-                        elif close == 1:
-                            self.showmenu = True
-                        elif close == -1:
-                            self.running = False
-                        else:
-                            raise ValueError("Unexpected value of [close]")
-                    elif event.key == pygame.K_UP and not self.touch_monster:
-                        self.doodle.shoot(self.assets["bullet"], [self.all_sprites, self.bullet_sprites])
 
             if not self.running:
                 break

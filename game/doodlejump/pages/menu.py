@@ -30,18 +30,18 @@ def menu(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, status: d
     while True:
         clock.tick(FPS)
     # get inputs
+        if status["enter"]:
+            return selected
+        if status["up"]:
+            selected -= 1
+            selected %= len(texts)
+        if status["down"]:
+            selected += 1
+            selected %= len(texts)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return -1
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    selected -= 1
-                    selected %= len(texts)
-                elif event.key == pygame.K_DOWN:
-                    selected += 1
-                    selected %= len(texts)
-                elif event.key == pygame.K_RETURN:
-                    return selected
 
     # update game
         all_sprites.update(status["move"])
