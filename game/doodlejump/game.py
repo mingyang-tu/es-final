@@ -4,7 +4,6 @@ import sys
 import socket
 import threading
 import json
-import time
 
 from .constants import *
 from .sprites.doodle import Doodle
@@ -15,7 +14,8 @@ from .generate import (
     generate_platform,
     generate_init_platform,
     generate_monster,
-    draw_text
+    draw_text,
+    draw_connected
 )
 from .collide import (
     jump_platform,
@@ -55,7 +55,7 @@ class Game:
     def __init__(self, host, port, assets_root="./doodlejump/assets/"):
         self.host = host
         self.port = port
-        self.move = 0
+        self.status = {"connected": False, "move": 0}
         self.running = True
 
         pygame.init()
@@ -83,16 +83,18 @@ class Game:
         ############### TODO ###############
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.bind((self.host, self.port))
-        s.settimeout(3)
+        s.settimeout(1)
         print(f'Bind {self.host}:{self.port}')
         while True:
             if not self.running:
                 break
             try:
                 data, addr = s.recvfrom(1024)
-                print("Data: ", data)
-                self.move = data2event(json.loads(data))
+                print("Data: ", data, end="\r")
+                self.status["connected"] = True
+                self.status["move"] = data2event(json.loads(data))
             except socket.timeout:
+                self.status["connected"] = False
                 print("Not received...", end="\r")
             except:
                 pass
@@ -143,7 +145,8 @@ class Game:
                     self.assets,
                     self.all_sprites,
                     self.doodle,
-                    self.score
+                    self.score,
+                    self.status
                 )
                 self.gameover = False
                 if close == 0:
@@ -156,7 +159,7 @@ class Game:
                     raise ValueError("Unexpected value of [close]")
 
             if self.showmenu:
-                close = menu(self.screen, self.clock, self.assets)
+                close = menu(self.screen, self.clock, self.assets, self.status)
                 if close == 0:
                     self.init_game()
                 elif close == -1 or close == 1:
@@ -172,7 +175,7 @@ class Game:
                     self.running = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
-                        close = pause(self.screen, self.clock, self.assets, self.all_sprites, self.score)
+                        close = pause(self.screen, self.clock, self.assets, self.all_sprites, self.score, self.status)
                         if close == 0:
                             pass
                         elif close == 1:
@@ -188,7 +191,7 @@ class Game:
                 break
 
         # update game
-            self.all_sprites.update(self.move)
+            self.all_sprites.update(self.status["move"])
 
             if not self.touch_monster:
                 jump_platform(self.doodle, self.platform_sprites)
@@ -226,6 +229,7 @@ class Game:
             self.screen.blit(self.assets["background"], (0, 0))
             self.all_sprites.draw(self.screen)
             draw_text(self.screen, self.assets["font"], str(self.score), 32, BLACK, 10, 0)
+            draw_connected(self.screen, self.assets["font"], self.status)
             pygame.display.update()
 
         self.running = False

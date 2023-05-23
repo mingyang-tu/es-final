@@ -1,9 +1,10 @@
 import pygame
 from ..constants import *
-from ..generate import draw_text, draw_image
+from ..generate import draw_text, draw_image, draw_connected
 
 
-def pause(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, all_sprites: pygame.sprite.LayeredUpdates, score: int):
+def pause(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, all_sprites: pygame.sprite.LayeredUpdates,
+          score: int, status: dict):
     selected = 0
     texts = ["Resume", "Menu"]
 
@@ -47,4 +48,5 @@ def pause(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, all_spri
                 24, BLACK, button_x, button_y, centerx=True, centery=True
             )
             button_y += 75
+        draw_connected(surf, assets["font"], status)
         pygame.display.update()

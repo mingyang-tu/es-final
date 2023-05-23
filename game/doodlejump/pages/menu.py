@@ -1,12 +1,12 @@
 import pygame
 from ..constants import *
-from ..generate import draw_text, draw_image
+from ..generate import draw_text, draw_image, draw_connected
 from ..sprites.platform import Platform
 from ..sprites.doodle import Doodle
 from ..collide import jump_platform
 
 
-def menu(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict):
+def menu(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, status: dict):
     selected = 0
     texts = ["Play", "Exit"]
     tutorial = ["[left], [right]: move doodle", "[space]: shoot bullet", "[p]: pause the game"]
@@ -44,7 +44,7 @@ def menu(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict):
                     return selected
 
     # update game
-        all_sprites.update()
+        all_sprites.update(status["move"])
         jump_platform(doodle, platform_sprites)
         if doodle.rect.top > HEIGHT:
             doodle.rect.centerx = 75
@@ -86,6 +86,7 @@ def menu(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict):
             "Use [up], [down], [enter] to select.",
             18, BLACK, HALF_WIDTH, HEIGHT-50, centerx=True
         )
+        draw_connected(surf, assets["font"], status)
 
         all_sprites.draw(surf)
         pygame.display.update()

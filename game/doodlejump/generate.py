@@ -6,6 +6,21 @@ from .sprites.platform import Platform, Spring
 from .sprites.monster import Monster
 
 
+def draw_connected(surf: pygame.Surface, font_name: str, status: dict):
+    if status["connected"]:
+        draw_text(
+            surf, font_name,
+            "connected",
+            18, GREEN, HALF_WIDTH, 0, centerx=True
+        )
+    else:
+        draw_text(
+            surf, font_name,
+            "disconnected",
+            18, BRIGHT_RED, HALF_WIDTH, 0, centerx=True
+        )
+
+
 def draw_image(surf: pygame.Surface, image: pygame.Surface, x: int, y: int):
     rect = image.get_rect()
     rect.centerx = x

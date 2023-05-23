@@ -1,11 +1,12 @@
 import pygame
 from ..constants import *
 from ..sprites.doodle import Doodle
-from ..generate import draw_text, draw_image
+from ..generate import draw_text, draw_image, draw_connected
 
 
 def game_over(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict,
-              all_sprites: pygame.sprite.LayeredUpdates, doodle: Doodle, score: int):
+              all_sprites: pygame.sprite.LayeredUpdates, doodle: Doodle,
+              score: int, status: dict):
     drop, target_pos = HEIGHT * 2, HEIGHT // 3
     camera_y = drop + target_pos
 
@@ -31,7 +32,7 @@ def game_over(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict,
             if event.type == pygame.QUIT:
                 return -1
 
-        all_sprites.update()
+        all_sprites.update(status["move"])
         if camera_y > target_pos:
             for sprite in all_sprites:
                 sprite.rect.y -= GG_SPEED
@@ -89,4 +90,5 @@ def game_over(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict,
             "Use [up], [down], [enter] to select.",
             18, BLACK, HALF_WIDTH, HEIGHT-50, centerx=True
         )
+        draw_connected(surf, assets["font"], status)
         pygame.display.update()
