@@ -92,9 +92,7 @@ class Game:
         s.bind((self.host, self.port))
         s.settimeout(1)
         print(f'Bind {self.host}:{self.port}')
-        while True:
-            if not self.running:
-                break
+        while self.running:
             try:
                 data, addr = s.recvfrom(1024)
                 print("Data: ", data, end="\r")
@@ -143,6 +141,7 @@ class Game:
         thread.start()
 
         self.showmenu = True
+        last_enter = True
 
         while self.running:
             if self.gameover:
@@ -158,6 +157,7 @@ class Game:
                 self.gameover = False
                 if close == 0:
                     self.init_game()
+                    last_enter = True
                 elif close == 1:
                     self.showmenu = True
                 elif close == -1 or close == 2:
@@ -169,6 +169,7 @@ class Game:
                 close = menu(self.screen, self.clock, self.assets, self.status)
                 if close == 0:
                     self.init_game()
+                    last_enter = True
                 elif close == -1 or close == 1:
                     break
                 else:
@@ -177,7 +178,7 @@ class Game:
             self.clock.tick(FPS)
 
         # get inputs
-            if self.status["enter"]:
+            if (self.status["enter"] and not last_enter) or not self.status["connected"]:
                 close = pause(self.screen, self.clock, self.assets, self.all_sprites, self.score, self.status)
                 if close == 0:
                     pass
@@ -198,6 +199,8 @@ class Game:
                 break
 
         # update game
+            last_enter = self.status["enter"]
+
             self.all_sprites.update(self.status["move"])
 
             if not self.touch_monster:

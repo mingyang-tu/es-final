@@ -11,21 +11,28 @@ def pause(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, all_spri
     button_x = HALF_WIDTH
     text_y = 150
 
+    last_enter = True
+    last_up = last_down = False
+
     while True:
         clock.tick(FPS)
 
-        if status["enter"]:
+        if status["enter"] and not last_enter:
             return selected
-        if status["up"]:
+        if status["up"] and not last_up:
             selected -= 1
             selected %= len(texts)
-        if status["down"]:
+        if status["down"] and not last_down:
             selected += 1
             selected %= len(texts)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return -1
+
+        last_enter = status["enter"]
+        last_up = status["up"]
+        last_down = status["down"]
 
         all_sprites.draw(surf)
         surf.blit(assets["transparent_bg"], (0, 0))
