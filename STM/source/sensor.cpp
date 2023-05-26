@@ -13,7 +13,6 @@ Sensor::Sensor(events::EventQueue &event_queue)
     BSP_ACCELERO_Init();    
     BSP_GYRO_Init();
     Calibrate();
-    _event_queue.call_every(SAMPLE_RATE, this, &Sensor::update);
 }
 
 void Sensor::Calibrate(){
@@ -48,11 +47,6 @@ void Sensor::button_fall(){
     button_state=1;
 }
 
-void Sensor::update(){
-    BSP_GYRO_GetXYZ(_pGyroDataXYZ);
-    rotation_distance += ((_pGyroDataXYZ[0] - _GyroOffset[0]) * SCALE_MULTIPLIER)*TimeStep; 
-    ThisThread::sleep_for(SAMPLE_PERIOD);
-}
 
 void Sensor::check_left_right(uint8_t& right, uint8_t& left) {
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
@@ -68,20 +62,10 @@ void Sensor::check_shot_up_down(uint8_t& shot,uint8_t& up, uint8_t& down) {
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
     if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER < -1.0)
         shot = 1;
-    if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER > 4.0){
-        if(edge==0){
-            up = 1;
-            edge=1;
-        }
-    }
-    else if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER < -4.0){
-        if(edge==0){
-            down = 1;
-            edge=1;
-        }
-    }
-    else
-        edge=0;
+    if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER > 4.0)
+        up=1;
+    else if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER < -4.0)
+        down = 1;
     //accumulate_y = 0.9 * accumulate_y + 0.1 * _pAccDataXYZ[1];
 }
 

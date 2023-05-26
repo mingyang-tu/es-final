@@ -12,8 +12,6 @@ public:
     
     void button_fall();
 
-    void update();
-
     void check_left_right(uint8_t& right, uint8_t& left);
 
     void check_shot_up_down(uint8_t& shot,uint8_t& up, uint8_t& down);
