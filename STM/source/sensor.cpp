@@ -44,6 +44,10 @@ void Sensor::Calibrate(){
     printf("Done calibration\n");
 }
 
+void Sensor::button_fall(){
+    button_state=1;
+}
+
 void Sensor::update(){
     BSP_GYRO_GetXYZ(_pGyroDataXYZ);
     rotation_distance += ((_pGyroDataXYZ[0] - _GyroOffset[0]) * SCALE_MULTIPLIER)*TimeStep; 
@@ -59,23 +63,38 @@ void Sensor::check_left_right(uint8_t& right, uint8_t& left) {
     accumulate_x = 0.8 * accumulate_x + 0.2 * _pAccDataXYZ[0];
 }
 
-void Sensor::check_up_down(uint8_t& jump, uint8_t& shot) {
+void Sensor::check_shot_up_down(uint8_t& shot,uint8_t& up, uint8_t& down) {
     //printf("Rotation distance = %f", rotation_distance);
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-    if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER > 1.0)
-        jump = 1;
     if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER < -1.0)
         shot = 1;
+    if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER > 4.0){
+        if(edge==0){
+            up = 1;
+            edge=1;
+        }
+    }
+    else if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER < -4.0){
+        if(edge==0){
+            down = 1;
+            edge=1;
+        }
+    }
+    else
+        edge=0;
     //accumulate_y = 0.9 * accumulate_y + 0.1 * _pAccDataXYZ[1];
 }
 
-void Sensor::check_jump(uint8_t& jump) {
-    if(rotation_distance > Rotation_threshold)
-        jump = 1;
-    rotation_distance = 0;
+void Sensor::check_button_fall(uint8_t& enter) {
+    if(button_state==1){
+        enter=1;
+        button_state=0;
+    }
+    else enter=0;
 }
 
-void Sensor::getAction(uint8_t& right, uint8_t& left, uint8_t& jump, uint8_t& shot){
+void Sensor::getAction(uint8_t& right, uint8_t& left, uint8_t& shot, uint8_t& enter,uint8_t& up, uint8_t& down){
     check_left_right(right, left);
-    check_up_down(jump,shot);
+    check_shot_up_down(shot,up,down);
+    check_button_fall(enter);
 }

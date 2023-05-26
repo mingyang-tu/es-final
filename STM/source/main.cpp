@@ -37,12 +37,16 @@ void reset() {
     event_queue.call(callback(&_sensor, &Sensor::Calibrate));
 }
 
+void enter() {
+    event_queue.call(callback(&_sensor, &Sensor::button_fall));
+}
+
 int main()
 {
     printf("==========================================\n");
     printf("====Pikachu Volleyball(STM32 and WiFi)====\n");
     printf("==========================================\n");
-    button.fall(&reset);
+    button.fall(&enter);
     event_queue.dispatch_forever();
     printf("\nDone\n");
 }

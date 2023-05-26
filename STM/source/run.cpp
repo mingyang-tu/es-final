@@ -4,8 +4,8 @@
 #include <cstdio>
 #include <cstdlib>
 
-#define IP_address  "192.168.50.112"
-#define Port_number 2049
+#define IP_address  "192.168.50.70"
+#define Port_number 9876
 #define SEND_INT    5
 SocketAddress addr(IP_address, Port_number);
 
@@ -60,11 +60,11 @@ WIFI::~WIFI() {
 void WIFI::send_data() {
     char data[64];
     nsapi_error_t response;
-    uint8_t right = 0, left = 0, jump = 0, shot = 0;
-    _sensor->getAction(right, left, jump, shot);
-    int len = sprintf(data,"{\"right\":%d,\"left\":%d,\"jump\":%d,\"shot\":%d}"
-                            , right, left, jump, shot);
-    printf("{\"right\":%d,\"left\":%d,\"jump\":%d,\"shot\":%d\n}",right,left, jump, shot);
+    uint8_t right = 0, left = 0, shot = 0,enter=0,up = 0,down=0;
+    _sensor->getAction(right, left, shot,enter,up,down);
+    int len = sprintf(data,"{\"right\":%d,\"left\":%d,\"shot\":%d,\"enter\":%d,\"up\":%d,\"down\":%d}"
+                            , right, left, shot, enter,up,down);
+    printf("{\"right\":%d,\"left\":%d,\"shot\":%d,\"enter\":%d,\"up\":%d,\"down\":%d\n}",right,left, shot,enter,up,down);
     response = _socket->sendto(addr, data, len);
     //printf("%d\n", response);
     if (0 >= response){
