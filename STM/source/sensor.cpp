@@ -1,84 +1,80 @@
 #include "sensor.h"
 #include <cstdio>
 
-#define TimeStep            (float)SAMPLE_RATE / 1000
-#define SAMPLE_RATE         2
-#define SAMPLE_PERIOD       2ms
-#define Rotation_threshold  1
-#define SCALE_MULTIPLIER    0.004
+#define SAMPLE_PERIOD 2ms
+#define ROTATION_THRESHOLD 285
 
-Sensor::Sensor(events::EventQueue &event_queue)
-   :_event_queue(event_queue)
-{
-    BSP_ACCELERO_Init();    
-    BSP_GYRO_Init();
-    Calibrate();
+const int LEFT_RIGHT_THRESHOLDS[] = {96, 191, 285, 376, 465, 550, 631, 707};
+
+Sensor::Sensor(events::EventQueue &event_queue) : _event_queue(event_queue) {
+  BSP_ACCELERO_Init();
+  Calibrate();
 }
 
-void Sensor::Calibrate(){
-    printf("Calibrating Sensors.....\n");
-    int n = 0;
-    for(int i = 0; i < 3; ++i){
-        _AccOffset[i] = 0;
-        _GyroOffset[i] = 0;
-    }
-    while(n < 2000){
-        BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-        BSP_GYRO_GetXYZ(_pGyroDataXYZ);
-        for(int i = 0; i < 3; ++i){
-            _AccOffset[i] += _pAccDataXYZ[i];
-            _GyroOffset[i] += _pGyroDataXYZ[i];
-        }
-        ThisThread::sleep_for(SAMPLE_PERIOD);
-        ++n;
-    }
-    for(int i = 0; i < 3; ++i){
-        _AccOffset[i] /= n;
-        _GyroOffset[i] /= n;
-    }
-    for (int i = 0; i < 3; ++i){
-        printf("%d ", _AccOffset[i]);
-        printf("%f ", _GyroOffset[i]);
-    }
-    printf("Done calibration\n");
-}
-
-void Sensor::button_fall(){
-    button_state=1;
-}
-
-
-void Sensor::check_left_right(uint8_t& right, uint8_t& left) {
+void Sensor::Calibrate() {
+  printf("Calibrating Sensors.....\n");
+  int n = 2000;
+  for (int i = 0; i < 3; ++i) {
+    _AccOffset[i] = 0;
+  }
+  for (int j = 0; j < n; ++j) {
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-    if((_pAccDataXYZ[0] - _AccOffset[0])*SCALE_MULTIPLIER > 0.8)
-        left = 1;
-    if((_pAccDataXYZ[0] - _AccOffset[0])*SCALE_MULTIPLIER < -0.8)
-        right = 1;
-    accumulate_x = 0.8 * accumulate_x + 0.2 * _pAccDataXYZ[0];
-}
-
-void Sensor::check_shot_up_down(uint8_t& shot,uint8_t& up, uint8_t& down) {
-    //printf("Rotation distance = %f", rotation_distance);
-    BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-    if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER < -1.0)
-        shot = 1;
-    if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER > 4.0)
-        up=1;
-    else if((_pAccDataXYZ[1] - _AccOffset[1] )*SCALE_MULTIPLIER < -4.0)
-        down = 1;
-    //accumulate_y = 0.9 * accumulate_y + 0.1 * _pAccDataXYZ[1];
-}
-
-void Sensor::check_button_fall(uint8_t& enter) {
-    if(button_state==1){
-        enter=1;
-        button_state=0;
+    for (int i = 0; i < 3; ++i) {
+      _AccOffset[i] += _pAccDataXYZ[i];
     }
-    else enter=0;
+    ThisThread::sleep_for(SAMPLE_PERIOD);
+  }
+  for (int i = 0; i < 3; ++i) {
+    _AccOffset[i] /= n;
+  }
+  printf("AccOffset = (%d, %d, %d)\n", _AccOffset[0], _AccOffset[1],
+         _AccOffset[2]);
+  printf("Done calibration\n");
 }
 
-void Sensor::getAction(uint8_t& right, uint8_t& left, uint8_t& shot, uint8_t& enter,uint8_t& up, uint8_t& down){
-    check_left_right(right, left);
-    check_shot_up_down(shot,up,down);
-    check_button_fall(enter);
+void Sensor::button_fall() { button_state = 1; }
+
+void Sensor::check_left_right(int8_t &move) {
+  BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
+  accumulate_x = (accumulate_x + _pAccDataXYZ[0] - _AccOffset[0]) >> 1;
+  if (accumulate_x > 0) {
+    for (int i = 7; i >= 0; --i) {
+      if (accumulate_x > LEFT_RIGHT_THRESHOLDS[i]) {
+        move = -i;
+        break;
+      }
+    }
+  } else if (accumulate_x < 0) {
+    for (int i = 7; i >= 0; --i) {
+      if (accumulate_x < -LEFT_RIGHT_THRESHOLDS[i]) {
+        move = i;
+        break;
+      }
+    }
+  } else {
+    move = 0;
+  }
+}
+
+void Sensor::check_up(uint8_t &up) {
+  BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
+  accumulate_y = (accumulate_y + _pAccDataXYZ[1] - _AccOffset[1]) >> 1;
+  if (accumulate_y > ROTATION_THRESHOLD)
+    up = 1;
+  else
+    up = 0;
+}
+
+void Sensor::check_button_fall(uint8_t &enter) {
+  if (button_state == 1) {
+    enter = 1;
+    button_state = 0;
+  } else
+    enter = 0;
+}
+
+void Sensor::getAction(int8_t &move, uint8_t &enter, uint8_t &up) {
+  check_left_right(move);
+  check_up(up);
+  check_button_fall(enter);
 }

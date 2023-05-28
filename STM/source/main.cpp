@@ -27,7 +27,7 @@ static EventQueue event_queue(/* event count */ 16 * EVENTS_EVENT_SIZE);
 
 InterruptIn button(BUTTON1);
 
-Thread thread;
+// Thread thread;
 
 UDPSocket socket;
 Sensor _sensor(event_queue);
@@ -44,7 +44,7 @@ void enter() {
 int main()
 {
     printf("==========================================\n");
-    printf("====Pikachu Volleyball(STM32 and WiFi)====\n");
+    printf("====== Doodle Jump (STM32 and WiFi) ======\n");
     printf("==========================================\n");
     button.fall(&enter);
     event_queue.dispatch_forever();
