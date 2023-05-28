@@ -58,9 +58,7 @@ class Game:
         self.status = {
             "connected": False,
             "move": 0,
-            "shot": False,
             "up": False,
-            "down": False,
             "enter": False
         }
         self.running = True
@@ -142,6 +140,7 @@ class Game:
 
         self.showmenu = True
         last_enter = True
+        last_up = False
 
         while self.running:
             if self.gameover:
@@ -188,7 +187,7 @@ class Game:
                     self.running = False
                 else:
                     raise ValueError("Unexpected value of [close]")
-            if self.status["shot"]:
+            if (self.status["up"] and not last_up) and not self.touch_monster:
                 self.doodle.shoot(self.assets["bullet"], [self.all_sprites, self.bullet_sprites])
 
             for event in pygame.event.get():
@@ -200,6 +199,7 @@ class Game:
 
         # update game
             last_enter = self.status["enter"]
+            last_up = self.status["up"]
 
             self.all_sprites.update(self.status["move"])
 

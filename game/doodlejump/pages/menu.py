@@ -28,7 +28,7 @@ def menu(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, status: d
     text_y = 100
 
     last_enter = True
-    last_up = last_down = False
+    last_up = False
 
     while True:
         clock.tick(FPS)
@@ -36,9 +36,6 @@ def menu(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, status: d
         if status["enter"] and not last_enter:
             return selected
         if status["up"] and not last_up:
-            selected -= 1
-            selected %= len(texts)
-        if status["down"] and not last_down:
             selected += 1
             selected %= len(texts)
 
@@ -49,7 +46,6 @@ def menu(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict, status: d
     # update game
         last_enter = status["enter"]
         last_up = status["up"]
-        last_down = status["down"]
 
         all_sprites.update(status["move"])
         jump_platform(doodle, platform_sprites)

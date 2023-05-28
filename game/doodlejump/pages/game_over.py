@@ -55,7 +55,7 @@ def game_over(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict,
     button_x = HALF_WIDTH
 
     last_enter = True
-    last_up = last_down = False
+    last_up = False
 
     while True:
         clock.tick(FPS)
@@ -63,9 +63,6 @@ def game_over(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict,
         if status["enter"] and not last_enter:
             return selected
         if status["up"] and not last_up:
-            selected -= 1
-            selected %= len(texts)
-        if status["down"] and not last_down:
             selected += 1
             selected %= len(texts)
 
@@ -75,7 +72,6 @@ def game_over(surf: pygame.Surface, clock: pygame.time.Clock, assets: dict,
 
         last_enter = status["enter"]
         last_up = status["up"]
-        last_down = status["down"]
 
         surf.blit(assets["background"], (0, 0))
         _draw_moving_text()
