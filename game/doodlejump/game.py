@@ -52,7 +52,7 @@ def load_assets(assets_root):
 
 
 class Game:
-    def __init__(self, host, port, assets_root="./doodlejump/assets/"):
+    def __init__(self, host, port, assets_root=os.path.join("doodlejump", "assets")):
         self.host = host
         self.port = port
         self.status = {
