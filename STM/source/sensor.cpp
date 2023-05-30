@@ -1,14 +1,19 @@
 #include "sensor.h"
+#include <cstdint>
 #include <cstdio>
+#include <cmath>
 
+#define PI180 57.29578
+#define TimeStep 0.00005
 #define SAMPLE_PERIOD 2ms
-#define ROTATION_THRESHOLD 285
+#define ROTATION_THRESHOLD 15
 
-const int LEFT_RIGHT_THRESHOLDS[] = {96, 191, 285, 376, 465, 550, 631, 707, 778};
+const float LEFT_RIGHT_THRESHOLDS[] = {6.5, 13, 19.5, 26, 32.5, 39, 45.5};
 int THRES_SIZE = sizeof(LEFT_RIGHT_THRESHOLDS) / sizeof(LEFT_RIGHT_THRESHOLDS[0]);
 
 Sensor::Sensor(events::EventQueue &event_queue) : _event_queue(event_queue) {
   BSP_ACCELERO_Init();
+  BSP_GYRO_Init();
   Calibrate();
 }
 
@@ -17,19 +22,32 @@ void Sensor::Calibrate() {
   int n = 2000;
   for (int i = 0; i < 3; ++i) {
     _AccOffset[i] = 0;
+    _GyroOffset[i] = 0;
   }
   for (int j = 0; j < n; ++j) {
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
+    BSP_GYRO_GetXYZ(_pGyroDataXYZ);
     for (int i = 0; i < 3; ++i) {
-      _AccOffset[i] += _pAccDataXYZ[i];
+      _AccOffset[i] += (float)_pAccDataXYZ[i];
+      _GyroOffset[i] += _pGyroDataXYZ[i];
     }
     ThisThread::sleep_for(SAMPLE_PERIOD);
   }
   for (int i = 0; i < 3; ++i) {
-    _AccOffset[i] /= n;
+    _AccOffset[i] /= (float)n;
+    _GyroOffset[i] /= (float)n;
   }
-  printf("AccOffset = (%d, %d, %d)\n", _AccOffset[0], _AccOffset[1],
-         _AccOffset[2]);
+  magnitude = 0;
+  for (int i = 0; i < 3; ++i) {
+    magnitude += _AccOffset[i]*_AccOffset[i];
+  }
+  magnitude = sqrtf(magnitude);
+  for (int i = 0; i < 3; ++i) {
+    _AngleOffset[i] = asinf(_AccOffset[i] / magnitude) * PI180;
+  }
+  printf("Magnitude = %f\n", magnitude);
+  printf("AngleOffset = (%f, %f, %f)\n", _AngleOffset[0], _AngleOffset[1], _AngleOffset[2]);
+  printf("GyroOffset = (%f, %f, %f)\n", _GyroOffset[0], _GyroOffset[1], _GyroOffset[2]);
   printf("Done calibration\n");
 }
 
@@ -37,7 +55,9 @@ void Sensor::button_fall() { button_state = 1; }
 
 void Sensor::check_left_right(int8_t &move) {
   BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-  accumulate_x = (accumulate_x + _pAccDataXYZ[0] - _AccOffset[0]) >> 1;
+  BSP_GYRO_GetXYZ(_pGyroDataXYZ);
+  float ang_acc = asinf(_pAccDataXYZ[0] / magnitude) * PI180 - _AngleOffset[0];
+  accumulate_x = 0.98 * (accumulate_x - (_pGyroDataXYZ[1] - _GyroOffset[1]) * TimeStep) + 0.02 * ang_acc;
   if (accumulate_x > 0) {
     for (int i = THRES_SIZE-1; i >= 0; --i) {
       if (accumulate_x > LEFT_RIGHT_THRESHOLDS[i]) {
@@ -59,8 +79,8 @@ void Sensor::check_left_right(int8_t &move) {
 
 void Sensor::check_up(uint8_t &up) {
   BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-  accumulate_y = (accumulate_y + _pAccDataXYZ[1] - _AccOffset[1]) >> 1;
-  if (accumulate_y > ROTATION_THRESHOLD)
+  float angle = asinf(_pAccDataXYZ[1] / magnitude) * PI180 - _AngleOffset[1];
+  if (angle > ROTATION_THRESHOLD)
     up = 1;
   else
     up = 0;
@@ -72,6 +92,14 @@ void Sensor::check_button_fall(uint8_t &enter) {
     button_state = 0;
   } else
     enter = 0;
+}
+
+void Sensor::get_acce_gyro(int &acce_x, int &acce_z, float &gyro) {
+  BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
+  BSP_GYRO_GetXYZ(_pGyroDataXYZ);
+  acce_x = _pAccDataXYZ[0];
+  acce_z = _pAccDataXYZ[2];
+  gyro = _pGyroDataXYZ[1] - _GyroOffset[1];
 }
 
 void Sensor::getAction(int8_t &move, uint8_t &enter, uint8_t &up) {

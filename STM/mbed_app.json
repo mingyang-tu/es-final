@@ -51,7 +51,8 @@
     },
     "target_overrides": {
         "*": {
-            "platform.stdio-convert-newlines": true
+            "platform.stdio-convert-newlines": true,
+            "target.printf_lib": "std"
         },
         "NUCLEO_L476RG": {
             "wifi-tx": "D8",

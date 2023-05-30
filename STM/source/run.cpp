@@ -7,7 +7,7 @@
 
 #define IP_address "192.168.50.70"
 #define Port_number 9876
-#define SEND_INT 5
+#define SEND_INT 5ms
 SocketAddress addr(IP_address, Port_number);
 
 WIFI::WIFI(WiFiInterface &wifi, Sensor *sensor, events::EventQueue &event_queue,
@@ -65,12 +65,20 @@ WIFI::~WIFI() {
 void WIFI::send_data() {
   char data[64];
   nsapi_error_t response;
+
   uint8_t enter = 0, up = 0;
   int8_t move = 0;
   _sensor->getAction(move, enter, up);
   int len = sprintf(data, "{\"move\":%d,\"enter\":%d,\"up\":%d}",
                     move, enter, up);
   printf("{\"move\":%d,\"enter\":%d,\"up\":%d}\n", move, enter, up);
+
+//   int acce_x, acce_z;
+//   float gyro;
+//   _sensor->get_acce_gyro(acce_x, acce_z, gyro);
+//   int len = sprintf(data, "{\"acce_x\":%d,\"acce_z\":%d,\"gyro\":%f}", acce_x, acce_z, gyro);
+//   printf("{\"acce_x\":%d,\"acce_z\":%d,\"gyro\":%f}\n", acce_x, acce_z, gyro);
+
   response = _socket->sendto(addr, data, len);
   // printf("%d\n", response);
   if (0 >= response) {

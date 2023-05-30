@@ -16,20 +16,24 @@ public:
 
   void check_up(uint8_t &up);
 
-  void check_jump(uint8_t &jump);
-
   void check_button_fall(uint8_t &enter);
+
+  void get_acce_gyro(int &acce_x, int &acce_z, float &gyro);
 
   void getAction(int8_t &move, uint8_t &enter, uint8_t &up);
 
 private:
   events::EventQueue &_event_queue;
   int16_t _pAccDataXYZ[3] = {0};
+  float _pGyroDataXYZ[3] = {0};
 
-  int _AccOffset[3] = {};
+  float _AccOffset[3] = {};
+  float _GyroOffset[3] = {};
+  float _AngleOffset[3] = {};
 
-  int accumulate_x = 0;
-  int accumulate_y = 0;
+  float magnitude = 0;
+
+  float accumulate_x = 0;
 
   bool button_state = 0;
 };
