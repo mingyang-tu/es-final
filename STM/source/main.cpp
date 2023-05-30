@@ -27,8 +27,6 @@ static EventQueue event_queue(/* event count */ 16 * EVENTS_EVENT_SIZE);
 
 InterruptIn button(BUTTON1);
 
-// Thread thread;
-
 UDPSocket socket;
 Sensor _sensor(event_queue);
 WIFI   _wifi(wifi, &_sensor, event_queue, &socket);
