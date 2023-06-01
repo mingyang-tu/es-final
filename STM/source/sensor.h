@@ -31,8 +31,6 @@ private:
     float _GyroOffset[3] = {};
     float _AngleOffset[3] = {};
 
-    float magnitude = 0;
-
     float accumulate_x = 0;
 
     bool button_state = 0;
