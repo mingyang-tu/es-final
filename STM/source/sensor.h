@@ -32,6 +32,7 @@ private:
     float _AngleOffset[2] = {};
 
     float accumulate_x = 0;
+    float accumulate_y = 0;
 
     bool button_state = 0;
 };
