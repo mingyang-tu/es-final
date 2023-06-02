@@ -29,7 +29,7 @@ private:
 
     float _AccOffset[3] = {};
     float _GyroOffset[3] = {};
-    float _AngleOffset[3] = {};
+    float _AngleOffset[2] = {};
 
     float accumulate_x = 0;
 

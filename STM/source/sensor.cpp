@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cmath>
 
-#define PI180              57.29578
+#define Rad2Deg            57.29578
 #define TimeStep           0.00005
 #define SAMPLE_PERIOD      2ms
 #define ROTATION_THRESHOLD 15
@@ -37,10 +37,10 @@ void Sensor::Calibrate() {
         _AccOffset[i] /= (float)n;
         _GyroOffset[i] /= (float)n;
     }
-    for (int i = 0; i < 3; ++i) {
-        _AngleOffset[i] = atan2f(_AccOffset[i], _AccOffset[2]) * PI180;
+    for (int i = 0; i < 2; ++i) {
+        _AngleOffset[i] = atan2f(_AccOffset[i], _AccOffset[2]) * Rad2Deg;
     }
-    printf("AngleOffset = (%f, %f, %f)\n", _AngleOffset[0], _AngleOffset[1], _AngleOffset[2]);
+    printf("AngleOffset = (%f, %f, -)\n", _AngleOffset[0], _AngleOffset[1]);
     printf("GyroOffset = (%f, %f, %f)\n", _GyroOffset[0], _GyroOffset[1], _GyroOffset[2]);
     printf("Done calibration\n");
 }
@@ -50,7 +50,7 @@ void Sensor::button_fall() { button_state = 1; }
 void Sensor::check_left_right(int8_t &move) {
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
     BSP_GYRO_GetXYZ(_pGyroDataXYZ);
-    float ang_acc = atan2f(_pAccDataXYZ[0], _pAccDataXYZ[2]) * PI180 - _AngleOffset[0];
+    float ang_acc = atan2f(_pAccDataXYZ[0], _pAccDataXYZ[2]) * Rad2Deg - _AngleOffset[0];
     accumulate_x = 0.98 * (accumulate_x - (_pGyroDataXYZ[1] - _GyroOffset[1]) * TimeStep) + 0.02 * ang_acc;
     if (accumulate_x > 0) {
         for (int i = THRES_SIZE - 1; i >= 0; --i) {
@@ -75,7 +75,7 @@ void Sensor::check_left_right(int8_t &move) {
 
 void Sensor::check_up(uint8_t &up) {
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
-    float angle = atan2f(_pAccDataXYZ[1], _pAccDataXYZ[2]) * PI180 - _AngleOffset[1];
+    float angle = atan2f(_pAccDataXYZ[1], _pAccDataXYZ[2]) * Rad2Deg - _AngleOffset[1];
     if (angle > ROTATION_THRESHOLD)
         up = 1;
     else
