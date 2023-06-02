@@ -1,4 +1,4 @@
-# Doodle Jump
+# Doodle Jump Using STM32 Board Sensor
 
 ## STM32 board
 
