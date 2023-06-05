@@ -85,7 +85,6 @@ class Game:
         self.touch_monster = False
 
     def update(self):
-        ############### TODO ###############
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.bind((self.host, self.port))
         s.settimeout(1)
@@ -97,13 +96,18 @@ class Game:
                 self.status["connected"] = True
                 data2event(json.loads(data), self.status)
             except socket.timeout:
-                self.status["connected"] = False
+                self.init_status()
                 print("Not received...", end="\r")
             except:
                 pass
         s.close()
         print("\nServer closed.")
-        ############### TODO ###############
+
+    def init_status(self):
+        self.status["connected"] = False
+        self.status["move"] = 0
+        self.status["up"] = False
+        self.status["enter"] = False
 
     def init_game(self):
         self.all_sprites = pygame.sprite.LayeredUpdates()

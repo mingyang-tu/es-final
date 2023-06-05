@@ -4,12 +4,11 @@
 #include <cmath>
 
 #define Rad2Deg            57.29578
-#define TimeStep           0.00005
+#define TimeStep           0.000025
 #define SAMPLE_PERIOD      2ms
-#define ROTATION_THRESHOLD 15
-
-const float LEFT_RIGHT_THRESHOLDS[] = {6.5, 13, 19.5, 26, 32.5, 39, 45.5};
-int THRES_SIZE = sizeof(LEFT_RIGHT_THRESHOLDS) / sizeof(LEFT_RIGHT_THRESHOLDS[0]);
+#define PITCH_THRESHOLD    15
+#define ROLL_DELTA         4.
+#define MAX_ROLL           10
 
 Sensor::Sensor(events::EventQueue &event_queue) : _event_queue(event_queue) {
     BSP_ACCELERO_Init();
@@ -21,24 +20,24 @@ void Sensor::Calibrate() {
     printf("Calibrating Sensors.....\n");
     int n = 2000;
     for (int i = 0; i < 3; ++i) {
-        _AccOffset[i] = 0;
         _GyroOffset[i] = 0;
     }
     for (int j = 0; j < n; ++j) {
         BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
         BSP_GYRO_GetXYZ(_pGyroDataXYZ);
         for (int i = 0; i < 3; ++i) {
-            _AccOffset[i] += (float)_pAccDataXYZ[i];
             _GyroOffset[i] += _pGyroDataXYZ[i];
         }
+        _AngleOffset[0] += atan2f(_pAccDataXYZ[0], _pAccDataXYZ[2]);
+        _AngleOffset[1] += atan2f(_pAccDataXYZ[1], _pAccDataXYZ[2]);
         ThisThread::sleep_for(SAMPLE_PERIOD);
     }
     for (int i = 0; i < 3; ++i) {
-        _AccOffset[i] /= (float)n;
         _GyroOffset[i] /= (float)n;
     }
     for (int i = 0; i < 2; ++i) {
-        _AngleOffset[i] = atan2f(_AccOffset[i], _AccOffset[2]) * Rad2Deg;
+        _AngleOffset[i] /= (float)n;
+        _AngleOffset[i] *= Rad2Deg;
     }
     printf("AngleOffset = (%f, %f, -)\n", _AngleOffset[0], _AngleOffset[1]);
     printf("GyroOffset = (%f, %f, %f)\n", _GyroOffset[0], _GyroOffset[1], _GyroOffset[2]);
@@ -52,32 +51,16 @@ void Sensor::check_left_right(int8_t &move) {
     BSP_GYRO_GetXYZ(_pGyroDataXYZ);
     float ang_acc = atan2f(_pAccDataXYZ[0], _pAccDataXYZ[2]) * Rad2Deg - _AngleOffset[0];
     accumulate_x = 0.98 * (accumulate_x - (_pGyroDataXYZ[1] - _GyroOffset[1]) * TimeStep) + 0.02 * ang_acc;
-    if (accumulate_x > 0) {
-        for (int i = THRES_SIZE - 1; i >= 0; --i) {
-            if (accumulate_x > LEFT_RIGHT_THRESHOLDS[i]) {
-                move = -i - 1;
-                break;
-            }
-        }
-    }
-    else if (accumulate_x < 0) {
-        for (int i = THRES_SIZE - 1; i >= 0; --i) {
-            if (accumulate_x < -LEFT_RIGHT_THRESHOLDS[i]) {
-                move = i + 1;
-                break;
-            }
-        }
-    }
-    else {
-        move = 0;
-    }
+    move = -int8_t(accumulate_x / ROLL_DELTA);
+    if (move > MAX_ROLL) move = MAX_ROLL;
+    if (move < -MAX_ROLL) move = -MAX_ROLL;
 }
 
 void Sensor::check_up(uint8_t &up) {
     BSP_ACCELERO_AccGetXYZ(_pAccDataXYZ);
     float ang_acc = atan2f(_pAccDataXYZ[1], _pAccDataXYZ[2]) * Rad2Deg - _AngleOffset[1];
     accumulate_y = 0.98 * (accumulate_y + (_pGyroDataXYZ[0] - _GyroOffset[0]) * TimeStep) + 0.02 * ang_acc;
-    if (accumulate_y > ROTATION_THRESHOLD)
+    if (accumulate_y > PITCH_THRESHOLD)
         up = 1;
     else
         up = 0;

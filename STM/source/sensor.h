@@ -27,7 +27,6 @@ private:
     int16_t _pAccDataXYZ[3] = {0};
     float _pGyroDataXYZ[3] = {0};
 
-    float _AccOffset[3] = {};
     float _GyroOffset[3] = {};
     float _AngleOffset[2] = {};
 

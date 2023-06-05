@@ -26,7 +26,7 @@ class LinearRegression:
 
 section = 2
 
-NUM_OF_SAMPLES = 500
+NUM_OF_SAMPLES = 1000
 
 if section == 1:
     HOST = "192.168.50.70"
@@ -61,7 +61,7 @@ if section == 1:
     np.save("./data/acce_z.npy", np.array(acce_z))
 
 elif section == 2:
-    gyro = np.load("./data/gyro.npy") * (-0.005 / 100)
+    gyro = np.load("./data/gyro.npy") * (-0.025 / 1000)
     acce_x = np.load("./data/acce_x.npy")
     acce_z = np.load("./data/acce_z.npy")
     n = gyro.shape[0]

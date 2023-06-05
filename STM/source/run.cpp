@@ -7,7 +7,7 @@
 
 #define IP_address  "192.168.50.70"
 #define Port_number 9876
-#define SEND_INT    5ms
+#define SEND_INT    25ms
 SocketAddress addr(IP_address, Port_number);
 
 WIFI::WIFI(WiFiInterface &wifi, Sensor *sensor, events::EventQueue &event_queue, UDPSocket *socket)
@@ -55,7 +55,7 @@ void WIFI::send_data() {
     int8_t move = 0;
     _sensor->getAction(move, enter, up);
     int len = sprintf(data, "{\"move\":%d,\"enter\":%d,\"up\":%d}", move, enter, up);
-    printf("{\"move\":%d,\"enter\":%d,\"up\":%d}\n", move, enter, up);
+    // printf("{\"move\":%d,\"enter\":%d,\"up\":%d}\n", move, enter, up);
 
     // int acce_x, acce_z;
     // float gyro;
