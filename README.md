@@ -23,3 +23,7 @@
 - Rotate left/right: Control the character’s left/right movement
 - Flip up: Shoot bullet / Control menu.
 - Press button: Pause the game / Select menu.
+
+## Demo video
+
+https://www.youtube.com/watch?v=z_7Y-ap9ra4
